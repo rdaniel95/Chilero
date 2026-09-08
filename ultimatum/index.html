@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimátum · Cabina</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg1:#2a0a48; --bg2:#5a1770; --bg3:#0b2358;
+    --pink:#ff2e7e; --pink-d:#c9105c;
+    --green:#37c24a; --green-d:#1f8a2f;
+    --red:#ff3838; --red-d:#c21d1d;
+    --blue:#0e74e0; --blue-d:#0a58ab;
+    --card:rgba(10,4,26,.55); --card-b:rgba(255,255,255,.14);
+    --ink:#fff; --muted:#c6b6e4;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    font-family:'Montserrat',system-ui,sans-serif;color:var(--ink);min-height:100%;
+    background:
+      radial-gradient(1100px 700px at 85% -10%, rgba(14,116,224,.4), transparent 60%),
+      radial-gradient(900px 800px at 5% 110%, rgba(255,46,126,.3), transparent 60%),
+      linear-gradient(135deg,var(--bg1),var(--bg2) 48%,var(--bg3));
+  }
+  .wrap{max-width:1400px;margin:0 auto;padding:18px 18px 60px}
+
+  .bar{
+    position:sticky;top:0;z-index:20;display:flex;align-items:center;gap:12px;flex-wrap:wrap;
+    padding:12px 14px;margin-bottom:16px;border-radius:16px;
+    background:rgba(8,3,22,.82);border:1px solid var(--card-b);backdrop-filter:blur(10px);
+    box-shadow:0 10px 30px rgba(0,0,0,.35);
+  }
+  .bar h1{font-size:20px;font-weight:900;letter-spacing:.02em;margin-right:auto}
+  .bar h1 small{display:block;font-size:11px;color:var(--muted);font-weight:700;letter-spacing:.1em}
+  button{font-family:inherit;font-weight:800;cursor:pointer;border:none;border-radius:12px;color:#fff;transition:transform .07s, filter .15s, background .15s}
+  button:active{transform:translateY(1px) scale(.99)}
+  button:disabled{opacity:.4;cursor:not-allowed}
+  .tb{padding:11px 15px;font-size:13px}
+  .btn-ghost{background:rgba(255,255,255,.10);border:1px solid var(--card-b)}
+  .btn-ghost:hover{background:rgba(255,255,255,.18)}
+  .btn-blue{background:linear-gradient(180deg,#2b8bf0,var(--blue));box-shadow:0 6px 16px rgba(14,116,224,.4)}
+  .btn-blue:hover{filter:brightness(1.08)}
+  .btn-amber{background:linear-gradient(180deg,#ffb23e,#e8890a);box-shadow:0 6px 16px rgba(232,137,10,.35)}
+  .btn-amber:hover{filter:brightness(1.06)}
+  .pill{font-size:12px;font-weight:800;color:var(--muted);padding:8px 12px;border-radius:20px;background:rgba(0,0,0,.3);border:1px solid var(--card-b)}
+  .pill b{color:#fff}
+  .pill.warn{color:#ffd27a;border-color:rgba(255,180,60,.5)}
+
+  .layout{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+  @media(max-width:900px){.layout{grid-template-columns:1fr}}
+
+  .panel{background:var(--card);border:1px solid var(--card-b);border-radius:18px;padding:14px;backdrop-filter:blur(6px)}
+  .panel > h2{font-size:13px;letter-spacing:.1em;color:var(--muted);text-transform:uppercase;margin-bottom:12px;font-weight:800}
+
+  /* Cards en juego */
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:14px}
+  .pc{background:rgba(255,255,255,.05);border:1px solid var(--card-b);border-radius:16px;padding:14px;position:relative}
+  .pc.dead{background:rgba(0,0,0,.28);opacity:.92}
+  .pc-top{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+  .pc-top .thumb{width:56px;height:56px;border-radius:12px;object-fit:cover;border:2px solid #fff;background:#0a0620;flex:0 0 auto}
+  .pc.dead .thumb{filter:grayscale(.6) brightness(.7)}
+  .pc-top .nm{font-size:22px;font-weight:900;text-transform:uppercase;line-height:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .pc-top .sub{font-size:11px;color:var(--muted);font-weight:700;margin-top:3px}
+  .pc-top .out{margin-left:auto;font-size:11px;padding:8px 10px;border-radius:10px}
+  .dead-badge{position:absolute;top:12px;right:12px;background:var(--red-d);color:#fff;font-size:11px;font-weight:900;padding:5px 9px;border-radius:8px;letter-spacing:.05em}
+
+  .track{display:flex;align-items:center;gap:10px;margin:9px 0}
+  .track .lbl{width:64px;font-size:11px;font-weight:800;color:var(--muted);letter-spacing:.08em}
+  .dots{display:flex;gap:6px;flex:1}
+  .d{width:20px;height:20px;border-radius:50%;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2)}
+  .d.alive{background:radial-gradient(circle at 38% 32%,#8ef06a,var(--green) 60%,var(--green-d));border-color:rgba(255,255,255,.4)}
+  .d.lost{background:radial-gradient(circle at 38% 32%,#ff9a9a,var(--red) 60%,var(--red-d));border-color:rgba(255,255,255,.35)}
+  .d.on{background:radial-gradient(circle at 38% 32%,#8ef06a,var(--green) 60%,var(--green-d));border-color:rgba(255,255,255,.4)}
+  .cnt{font-size:12px;font-weight:800;color:var(--muted);width:30px;text-align:right}
+
+  .ops{display:flex;gap:8px;margin-top:6px}
+  .op{flex:1;padding:12px 6px;font-size:14px;border-radius:11px;display:flex;align-items:center;justify-content:center;gap:5px}
+  .op-minus-life{background:linear-gradient(180deg,#ff5a5a,var(--red-d));box-shadow:0 5px 14px rgba(200,29,29,.4)}
+  .op-plus-hit{background:linear-gradient(180deg,#41d857,var(--green-d));box-shadow:0 5px 14px rgba(31,138,47,.4)}
+  .op-rev{flex:0 0 auto;background:rgba(255,255,255,.10);border:1px solid var(--card-b);padding:12px 12px;font-size:13px}
+  .op-rev:hover{background:rgba(255,255,255,.2)}
+  .op:hover{filter:brightness(1.08)}
+  .ops-row2{display:flex;gap:8px;margin-top:8px}
+  .revlbl{font-size:10px;color:var(--muted);font-weight:800;align-self:center;letter-spacing:.06em;margin-right:2px}
+
+  /* Banca */
+  .bench{display:flex;flex-direction:column;gap:8px;max-height:70vh;overflow:auto}
+  .bi{display:flex;align-items:center;gap:10px;padding:8px;border-radius:12px;background:rgba(255,255,255,.05);border:1px solid var(--card-b)}
+  .bi img{width:40px;height:40px;border-radius:9px;object-fit:cover;border:1px solid var(--card-b);background:#0a0620}
+  .bi .bn{flex:1;font-weight:800;font-size:15px;text-transform:uppercase;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bi button{padding:8px 12px;font-size:12px}
+  .bench-empty,.cards-empty{color:var(--muted);font-weight:600;font-size:14px;text-align:center;padding:26px 12px;border:1px dashed var(--card-b);border-radius:14px}
+  .benchtools{display:flex;gap:8px;margin-bottom:10px}
+  .benchtools button{flex:1;font-size:12px;padding:9px}
+
+  .toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:#0e1230;border:1px solid var(--card-b);color:#fff;padding:12px 18px;border-radius:12px;font-weight:800;opacity:0;pointer-events:none;transition:.25s;box-shadow:0 10px 30px rgba(0,0,0,.5);z-index:60}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .link{color:#8fc4ff;cursor:pointer;text-decoration:underline;font-weight:700}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <h1>ULTIMÁTUM<small>CABINA</small></h1>
+    <span class="pill" id="status">Sin pool</span>
+    <span class="pill" id="counter">0 en juego</span>
+    <button class="tb btn-ghost" id="btnImport">Importar juego.json</button>
+    <button class="tb btn-blue" id="btnPantalla">Abrir pantalla</button>
+    <button class="tb btn-amber" id="btnReset">Reiniciar ronda</button>
+    <input type="file" id="file" accept="application/json,.json" hidden>
+  </div>
+
+  <div class="layout">
+    <div class="panel">
+      <h2>En juego</h2>
+      <div class="cards" id="cards"></div>
+    </div>
+    <div class="panel">
+      <h2>Banca</h2>
+      <div class="benchtools">
+        <button class="btn-ghost" id="btnAll">Agregar todos</button>
+        <button class="btn-ghost" id="btnNone">Vaciar ronda</button>
+      </div>
+      <div class="bench" id="bench"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const MAX_VIDAS=2, MAX_ACIERTOS=6, MAX_JUGADORES=10, MIN_JUGADORES=4;
+const LS_POOL='ultimatum_pool_v1';        // pool del editor (misma PC)
+const LS_CABINA='ultimatum_cabina_v1';    // estado de trabajo de la cabina
+const LS_STATE='ultimatum_state_v1';      // snapshot que lee la pantalla
+
+let pool=[];          // [{id,nombre,foto}]
+let st={};            // id -> {vidas,aciertos,en_juego}
+let bc;
+
+const $=s=>document.querySelector(s);
+const cardsEl=$('#cards'), benchEl=$('#bench');
+
+function toast(m){const t=$('#toast');t.textContent=m;t.classList.add('show');clearTimeout(t._t);t._t=setTimeout(()=>t.classList.remove('show'),1800);}
+function esc(s){return (s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+
+/* ---------- Carga de pool ---------- */
+function ensureState(){
+  pool.forEach(p=>{ if(!st[p.id]) st[p.id]={vidas:MAX_VIDAS,aciertos:0,en_juego:false}; });
+  // limpiar estados huérfanos
+  Object.keys(st).forEach(id=>{ if(!pool.find(p=>p.id===id)) delete st[id]; });
+}
+function setPool(arr,{keepState=false}={}){
+  pool = arr.map(p=>({id:p.id||('p'+Math.random().toString(36).slice(2,8)),nombre:(p.nombre||'').toString().toUpperCase(),foto:p.foto||null}));
+  if(!keepState) st={};
+  ensureState();
+  saveCabina(); render(); broadcast();
+}
+
+/* ---------- Persistencia cabina ---------- */
+function saveCabina(){ try{ localStorage.setItem(LS_CABINA, JSON.stringify({pool,st})); }catch(e){} }
+function loadCabina(){
+  try{
+    const r=localStorage.getItem(LS_CABINA);
+    if(r){ const d=JSON.parse(r); pool=d.pool||[]; st=d.st||{}; ensureState(); return true; }
+  }catch(e){}
+  return false;
+}
+
+/* ---------- Acciones ---------- */
+function activos(){ return pool.filter(p=>st[p.id]?.en_juego); }
+function nActivos(){ return activos().length; }
+
+function toggleJuego(id,on){
+  const s=st[id]; if(!s) return;
+  if(on && nActivos()>=MAX_JUGADORES){ toast('Máximo '+MAX_JUGADORES+' en juego'); return; }
+  s.en_juego=on;
+  commit();
+}
+function chgVida(id,delta){ const s=st[id]; if(!s)return; s.vidas=Math.max(0,Math.min(MAX_VIDAS,s.vidas+delta)); commit(); }
+function chgAcierto(id,delta){ const s=st[id]; if(!s)return; s.aciertos=Math.max(0,Math.min(MAX_ACIERTOS,s.aciertos+delta)); commit(); }
+
+function resetRonda(){
+  activos().forEach(p=>{ st[p.id].vidas=MAX_VIDAS; st[p.id].aciertos=0; });
+  commit(); toast('Ronda reiniciada');
+}
+function agregarTodos(){
+  let n=nActivos();
+  for(const p of pool){ if(n>=MAX_JUGADORES) break; if(!st[p.id].en_juego){ st[p.id].en_juego=true; n++; } }
+  commit();
+}
+function vaciarRonda(){ pool.forEach(p=>st[p.id].en_juego=false); commit(); }
+
+function commit(){ saveCabina(); render(); broadcast(); }
+
+/* ---------- Broadcast a la pantalla ---------- */
+function snapshot(){
+  return activos().map(p=>({id:p.id,nombre:p.nombre,foto:p.foto,vidas:st[p.id].vidas,aciertos:st[p.id].aciertos}));
+}
+function broadcast(){
+  const players=snapshot();
+  try{ localStorage.setItem(LS_STATE, JSON.stringify(players)); }catch(e){}
+  try{ bc && bc.postMessage({type:'state',players}); }catch(e){}
+}
+function connect(){
+  try{
+    bc=new BroadcastChannel('ultimatum');
+    bc.onmessage=ev=>{ if((ev.data||{}).type==='hello') broadcast(); };
+  }catch(e){}
+}
+document.addEventListener('visibilitychange',()=>{ if(!document.hidden) broadcast(); });
+
+/* ---------- Render ---------- */
+function render(){
+  const n=nActivos();
+  $('#status').textContent = pool.length ? (pool.length+' en pool') : 'Sin pool';
+  const c=$('#counter');
+  c.textContent = n+' en juego';
+  c.classList.toggle('warn', n>0 && n<MIN_JUGADORES);
+  if(n>0 && n<MIN_JUGADORES) c.textContent = n+' en juego (mín '+MIN_JUGADORES+')';
+
+  // Cards en juego
+  const act=activos();
+  if(!act.length){
+    cardsEl.innerHTML='<div class="cards-empty">Nadie en juego. Agrega participantes desde la Banca →</div>';
+  }else{
+    cardsEl.innerHTML=act.map(p=>{
+      const s=st[p.id], dead=s.vidas===0;
+      let vd='';for(let i=0;i<MAX_VIDAS;i++){const lost=i<(MAX_VIDAS-s.vidas);vd+=`<div class="d ${lost?'lost':'alive'}"></div>`;}
+      let ac='';for(let i=0;i<MAX_ACIERTOS;i++){ac+=`<div class="d ${i<s.aciertos?'on':''}"></div>`;}
+      return `<div class="pc ${dead?'dead':''}" data-id="${p.id}">
+        ${dead?'<div class="dead-badge">ELIMINADO</div>':''}
+        <div class="pc-top">
+          ${p.foto?`<img class="thumb" src="${p.foto}" alt="">`:'<div class="thumb"></div>'}
+          <div style="min-width:0">
+            <div class="nm">${esc(p.nombre)}</div>
+            <div class="sub">${s.vidas} vida(s) · ${s.aciertos}/${MAX_ACIERTOS} aciertos</div>
+          </div>
+          <button class="out btn-ghost" data-act="out">Sacar</button>
+        </div>
+        <div class="track">
+          <span class="lbl">VIDAS</span>
+          <div class="dots">${vd}</div>
+          <span class="cnt">${s.vidas}/${MAX_VIDAS}</span>
+        </div>
+        <div class="track">
+          <span class="lbl">ACIERTOS</span>
+          <div class="dots">${ac}</div>
+          <span class="cnt">${s.aciertos}/${MAX_ACIERTOS}</span>
+        </div>
+        <div class="ops">
+          <button class="op op-minus-life" data-act="mlife">− Vida</button>
+          <button class="op op-plus-hit" data-act="phit">＋ Acierto</button>
+        </div>
+        <div class="ops-row2">
+          <span class="revlbl">CORREGIR</span>
+          <button class="op op-rev" data-act="plife" title="Regresar una vida">＋ Vida</button>
+          <button class="op op-rev" data-act="mhit" title="Quitar un acierto">− Acierto</button>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  // Banca (los que no están en juego)
+  const banca=pool.filter(p=>!st[p.id].en_juego);
+  if(!pool.length){
+    benchEl.innerHTML='<div class="bench-empty">Importa un <b>juego.json</b> para empezar.</div>';
+  }else if(!banca.length){
+    benchEl.innerHTML='<div class="bench-empty">Todos están en juego.</div>';
+  }else{
+    benchEl.innerHTML=banca.map(p=>`
+      <div class="bi" data-id="${p.id}">
+        ${p.foto?`<img src="${p.foto}" alt="">`:'<div style="width:40px;height:40px;border-radius:9px;background:#0a0620"></div>'}
+        <span class="bn">${esc(p.nombre)}</span>
+        <button class="btn-blue" data-act="in" ${nActivos()>=MAX_JUGADORES?'disabled':''}>Agregar</button>
+      </div>`).join('');
+  }
+}
+
+/* ---------- Eventos ---------- */
+cardsEl.addEventListener('click',e=>{
+  const btn=e.target.closest('button[data-act]'); if(!btn) return;
+  const id=e.target.closest('.pc').dataset.id, act=btn.dataset.act;
+  if(act==='mlife') chgVida(id,-1);
+  else if(act==='plife') chgVida(id,+1);
+  else if(act==='phit') chgAcierto(id,+1);
+  else if(act==='mhit') chgAcierto(id,-1);
+  else if(act==='out') toggleJuego(id,false);
+});
+benchEl.addEventListener('click',e=>{
+  const btn=e.target.closest('button[data-act=in]'); if(!btn) return;
+  toggleJuego(e.target.closest('.bi').dataset.id,true);
+});
+$('#btnAll').addEventListener('click',agregarTodos);
+$('#btnNone').addEventListener('click',vaciarRonda);
+$('#btnReset').addEventListener('click',resetRonda);
+$('#btnPantalla').addEventListener('click',()=>{ window.open('pantalla.html','ultimatum_pantalla'); broadcast(); });
+
+$('#btnImport').addEventListener('click',()=>$('#file').click());
+$('#file').addEventListener('change',e=>{
+  const f=e.target.files[0]; if(!f) return;
+  const fr=new FileReader();
+  fr.onload=ev=>{
+    try{
+      const data=JSON.parse(ev.target.result);
+      const arr=Array.isArray(data)?data:data.participantes;
+      if(!Array.isArray(arr)||!arr.length) throw new Error('Sin participantes');
+      setPool(arr); toast('Importados '+arr.length+' participantes');
+    }catch(err){ toast('Archivo inválido: '+err.message); }
+    e.target.value='';
+  };
+  fr.readAsText(f);
+});
+
+/* ---------- Init ---------- */
+connect();
+if(loadCabina() && pool.length){
+  render(); broadcast();
+}else{
+  // Sin estado previo: intenta jalar el pool del editor en esta misma PC
+  try{
+    const r=localStorage.getItem(LS_POOL);
+    if(r){ const arr=JSON.parse(r); if(Array.isArray(arr)&&arr.length){ setPool(arr); toast('Pool del editor cargado'); } else render(); }
+    else render();
+  }catch(e){ render(); }
+}
+</script>
+</body>
+</html>

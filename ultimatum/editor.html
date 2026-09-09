@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ultimátum · Editor de participantes</title>
+<title>Game Over · Editor de participantes</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,400;0,600;0,700;0,800;0,900&display=swap" rel="stylesheet">
@@ -121,7 +121,7 @@
 <div class="wrap">
   <header>
     <div class="title">
-      <h1>ULTIMÁTUM · Editor</h1>
+      <h1>GAME OVER · Editor</h1>
       <span>Arma el pool de participantes · foto + nombre</span>
     </div>
     <div class="toolbar">
@@ -340,7 +340,7 @@ $('#btnSave').addEventListener('click', async ()=>{
     const sha=await ghGetSha(token);
     const nextRev=(currentRev||0)+1;
     const data={ app:'ultimatum', version:1, rev:nextRev, savedAt:new Date().toISOString(), participantes:pool };
-    const body={ message:'Roster Ultimátum v'+nextRev, content:b64utf8(JSON.stringify(data)), branch:GH.branch };
+    const body={ message:'Roster Game Over v'+nextRev, content:b64utf8(JSON.stringify(data)), branch:GH.branch };
     if(sha) body.sha=sha;
     const url=`https://api.github.com/repos/${GH.owner}/${GH.repo}/contents/${GH.path}`;
     const r=await fetch(url,{method:'PUT',headers:{Authorization:'Bearer '+token,Accept:'application/vnd.github+json'},body:JSON.stringify(body)});

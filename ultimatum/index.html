@@ -107,8 +107,10 @@
   <div class="bar">
     <h1>ULTIMÁTUM<small>CABINA</small></h1>
     <span class="pill" id="status">Sin pool</span>
+    <span class="pill" id="verchip" title="Versión del roster publicado">—</span>
     <span class="pill" id="counter">0 en juego</span>
-    <button class="tb btn-ghost" id="btnImport">Importar juego.json</button>
+    <button class="tb btn-ghost" id="btnRefresh">Actualizar</button>
+    <button class="tb btn-ghost" id="btnImport">Importar</button>
     <button class="tb btn-blue" id="btnPantalla">Abrir pantalla</button>
     <button class="tb btn-amber" id="btnReset">Reiniciar ronda</button>
     <input type="file" id="file" accept="application/json,.json" hidden>
@@ -137,6 +139,8 @@ const MAX_VIDAS=2, MAX_ACIERTOS=6, MAX_JUGADORES=10, MIN_JUGADORES=4;
 const LS_POOL='ultimatum_pool_v1';        // pool del editor (misma PC)
 const LS_CABINA='ultimatum_cabina_v1';    // estado de trabajo de la cabina
 const LS_STATE='ultimatum_state_v1';      // snapshot que lee la pantalla
+const JSON_URL='juego.json';              // roster publicado en el repo
+let currentRev=0, savedAt=null;
 
 let pool=[];          // [{id,nombre,foto}]
 let st={};            // id -> {vidas,aciertos,en_juego}
@@ -212,12 +216,42 @@ function connect(){
     bc.onmessage=ev=>{ if((ev.data||{}).type==='hello') broadcast(); };
   }catch(e){}
 }
+
+/* ---------- Leer roster publicado del repo ---------- */
+function fmtDate(iso){ if(!iso) return ''; try{ return new Date(iso).toLocaleString('es-GT',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}); }catch(e){ return ''; } }
+function paintVer(){ const c=$('#verchip'); c.textContent = currentRev ? ('v'+currentRev+(savedAt?' · '+fmtDate(savedAt):'')) : 'sin publicar'; }
+async function fetchPublished(){
+  const res=await fetch(JSON_URL+'?t='+Date.now(),{cache:'no-store'});
+  if(res.status===404) return {notfound:true};
+  if(!res.ok) throw new Error('HTTP '+res.status);
+  return res.json();
+}
+function applyRoster(data,{keepState=true}={}){
+  const arr = Array.isArray(data)?data:data.participantes;
+  if(!Array.isArray(arr)||!arr.length) throw new Error('Sin participantes');
+  setPool(arr,{keepState});                 // conserva vidas/aciertos por id; nuevos → banca
+  currentRev = (data&&data.rev)?data.rev:currentRev;
+  savedAt = (data&&data.savedAt)?data.savedAt:savedAt;
+  paintVer();
+}
+$('#btnRefresh').addEventListener('click', async ()=>{
+  const b=$('#btnRefresh'); b.disabled=true;
+  try{
+    const data=await fetchPublished();
+    if(data.notfound){ toast('Aún no hay roster publicado'); return; }
+    const prev=currentRev;
+    applyRoster(data,{keepState:true});
+    toast(currentRev>prev ? ('Roster actualizado v'+prev+' → v'+currentRev) : ('Ya estás en la más reciente (v'+currentRev+')'));
+  }catch(err){ toast('No se pudo leer del repo: '+err.message); }
+  finally{ b.disabled=false; }
+});
 document.addEventListener('visibilitychange',()=>{ if(!document.hidden) broadcast(); });
 
 /* ---------- Render ---------- */
 function render(){
   const n=nActivos();
   $('#status').textContent = pool.length ? (pool.length+' en pool') : 'Sin pool';
+  paintVer();
   const c=$('#counter');
   c.textContent = n+' en juego';
   c.classList.toggle('warn', n>0 && n<MIN_JUGADORES);
@@ -317,17 +351,25 @@ $('#file').addEventListener('change',e=>{
 });
 
 /* ---------- Init ---------- */
-connect();
-if(loadCabina() && pool.length){
-  render(); broadcast();
-}else{
-  // Sin estado previo: intenta jalar el pool del editor en esta misma PC
+async function init(){
+  connect();
+  // 1) arranca con lo local (instantáneo / sirve offline)
+  if(loadCabina() && pool.length){
+    render(); broadcast();
+  }else{
+    try{
+      const r=localStorage.getItem(LS_POOL);
+      if(r){ const arr=JSON.parse(r); if(Array.isArray(arr)&&arr.length){ setPool(arr); } else render(); }
+      else render();
+    }catch(e){ render(); }
+  }
+  // 2) luego el repo manda: refresca el roster sin tocar la ronda en curso
   try{
-    const r=localStorage.getItem(LS_POOL);
-    if(r){ const arr=JSON.parse(r); if(Array.isArray(arr)&&arr.length){ setPool(arr); toast('Pool del editor cargado'); } else render(); }
-    else render();
-  }catch(e){ render(); }
+    const data=await fetchPublished();
+    if(!data.notfound){ applyRoster(data,{keepState:true}); }
+  }catch(e){ /* offline: se queda con lo local */ }
 }
+init();
 </script>
 </body>
 </html>
